@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Dancer-Plugin-Database
-version:            0.08_01
+version:            0.09
 abstract:           easy database connections for Dancer applications
 author:
     - David Precious <davidp@preshweb.co.uk>
