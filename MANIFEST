@@ -8,4 +8,5 @@ t/01-basic.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
+t/lib/TestApp.pm
 META.yml                                 Module meta-data (added by MakeMaker)
