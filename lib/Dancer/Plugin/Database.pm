@@ -10,7 +10,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 my $settings = undef;
 
@@ -43,7 +43,7 @@ register database => sub {
                     "Database connection went away, reconnecting"
                 );
                 if ($handle->{dbh}) { $handle->{dbh}->disconnect; }
-                return $handle->{dbh}= _get_connection();
+                return $handle->{dbh}= _get_connection($settings);
             }
         }
     } else {
