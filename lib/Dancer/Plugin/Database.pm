@@ -10,7 +10,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 my $settings = undef;
 
@@ -164,11 +164,20 @@ sub _get_settings {
             );
         }
     }
-    
+
     # We should have soemthing to return now; remove any unrelated connections
     # (only needed if this is the default connection), and make sure we have a
-    # connection_check_threshold, then return what we found
+    # connection_check_threshold, then return what we found.  In previous
+    # versions the documentation contained a typo mentioning
+    # connectivity-check-threshold, so support that as an alias.
     delete $return_settings->{connections};
+    if (exists $return_settings->{'connectivity-check-threshold'}
+        && !exists $return_settings->{connection_check_threshold})
+    {
+        $return_settings->{connection_check_threshold}
+            = delete $return_settings->{'connectivity-check-threshold'};
+    }
+
     $return_settings->{connection_check_threshold} ||= 30;
     return $return_settings;
 
@@ -220,13 +229,13 @@ should be specified as, for example:
             host: 'localhost'
             username: 'myusername'
             password: 'mypassword'
-            connectivity-check-threshold: 10
+            connection_check_threshold: 10
             dbi_params:
                 RaiseError: 1
                 AutoCommit: 1
             on_connect_do: ["SET NAMES 'utf8'", "SET CHARACTER SET 'utf8'" ]
 
-The C<connectivity-check-threshold> setting is optional, if not provided, it
+The C<connection_check_threshold> setting is optional, if not provided, it
 will default to 30 seconds.  If the database keyword was last called more than
 this number of seconds ago, a quick check will be performed to ensure that we
 still have a connection to the database, and will reconnect if not.  This
