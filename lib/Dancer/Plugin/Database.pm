@@ -3,6 +3,7 @@ package Dancer::Plugin::Database;
 use strict;
 use Dancer::Plugin;
 use DBI;
+use Dancer::Plugin::Database::Handle;
 
 =head1 NAME
 
@@ -10,7 +11,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '0.12';
+our $VERSION = '0.12_01';
 
 my $settings = undef;
 
@@ -112,7 +113,9 @@ sub _get_connection {
         }
     }
 
-    return $dbh;
+    # Re-bless it as a Dancer::Plugin::Database::Handle object, to provide nice
+    # extra features:
+    return bless $dbh, 'Dancer::Plugin::Database::Handle';
 }
 
 
@@ -189,13 +192,19 @@ sub _get_settings {
     use Dancer;
     use Dancer::Plugin::Database;
 
-    # Calling the database keyword will get you a connected DBI handle:
+    # Calling the database keyword will get you a connected database handle:
     get '/widget/view/:id' => sub {
         my $sth = database->prepare(
             'select * from widgets where id = ?',
         );
         $sth->execute(params->{id});
         template 'display_widget', { widget => $sth->fetchrow_hashref };
+    };
+
+    # The handle is a Dancer::Plugin::Database::Handle object, which subclasses
+    # DBI's DBI::db handle and adds a few convenience features, for example:
+    get '/insert/:name' => sub {
+        database->quick_insert('people', { name => params->{name} });
     };
 
     dance;
@@ -207,7 +216,12 @@ below.
 =head1 DESCRIPTION
 
 Provides an easy way to obtain a connected DBI database handle by simply calling
-the database keyword within your L<Dancer> application.
+the database keyword within your L<Dancer> application
+
+Returns a L<Dancer::Plugin::Database::Handle> object, which is a subclass of
+L<DBI>'s L<DBI::db> connection handle object, so it does everything you'd expect
+to do with DBI, but also adds a few convenience methods.  See the documentation
+for L<Dancer::Plugin::Database::Handle> for full details of those.
 
 Takes care of ensuring that the database handle is still connected and valid.
 If the handle was last asked for more than C<connection_check_threshold> seconds
@@ -292,6 +306,28 @@ If you have declared named connections as described above in 'DEFINING MULTIPLE
 CONNECTIONS', then calling the database() keyword with the name of the
 connection as specified in the config file will get you a database handle
 connected with those details.
+
+
+=head1 CONVENIENCE FEATURES (quick_update, quick_insert, quick_delete)
+
+The handle returned by the C<database> keyword is a
+L<Dancer::Plugin::Database::Handle> object, which subclasses the C<DBI::db> DBI
+connection handle.  This means you can use it just like you'd normally use a DBI
+handle, but extra convenience methods are provided, as documented in the POD for
+L<Dancer::Plugin::Database::Handle>.
+
+Examples:
+
+  # Update the row where the 'id' column is '42', setting the 'foo' column to
+  # 'Bar':
+  database->quick_update($table_name, { id => 42 }, { foo => 'Bar');
+
+  # Insert a new row, using a named connection (see above)
+  database('connectionname')->quick_insert($table_name, { foo => 'Bar' });
+
+  # Delete the row with id 42:
+  database->quick_delete($table_name, { id => 42 });
+
 
 =head1 AUTHOR
 
