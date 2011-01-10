@@ -11,7 +11,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '0.91';
+our $VERSION = '0.91_01';
 
 my $settings = undef;
 
@@ -24,12 +24,24 @@ my %handles;
 my $def_handle = {};
 
 register database => sub {
-    my $name = shift;
+    my $arg = shift;
+
+    my $name;
+    my $handle;
 
     _load_db_settings() if (!$settings);
-    
-    my $handle = defined($name) ? $handles{$name} : $def_handle;
-    my $settings = _get_settings($name);
+
+    # Update settings from configuration file with those from application
+    if ( ref $arg eq 'HASH' ) {
+        for my $key ( keys %$arg ) {
+            $settings->{$key} = $arg->{$key};
+        }
+    }
+    else {
+        $name     = $arg;
+        $handle   = defined($name) ? $handles{$name} : $def_handle;
+        $settings = _get_settings($name);
+    }
 
     if ($handle->{dbh}) {
         if (time - $handle->{last_connection_check}
@@ -293,6 +305,15 @@ connection you want, for example:
     my $bar_dbh = database('bar');
 
 
+=head1 RUNTIME CONFIGURATION
+
+You can pass a hashref to the C<database()> keyword to provide configuration
+details to override any in the config file at runtime if desired, for instance:
+
+    my $dbh = database({ driver => 'SQLite', database => $filename });
+
+(Thanks to Alan Haggai for this feature.)
+
 
 =head1 GETTING A DATABASE HANDLE
 
@@ -306,6 +327,9 @@ If you have declared named connections as described above in 'DEFINING MULTIPLE
 CONNECTIONS', then calling the database() keyword with the name of the
 connection as specified in the config file will get you a database handle
 connected with those details.
+
+You can also pass a hashref of settings if you wish to provide settings at
+runtime.
 
 
 =head1 CONVENIENCE FEATURES (quick_update, quick_insert, quick_delete)
@@ -350,6 +374,8 @@ Igor Bujna
 
 Franck Cuny
 
+Alan Haggai
+
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-dancer-plugin-database at rt.cpan.org>, or through
@@ -393,7 +419,7 @@ You can find the author on IRC in the channel C<#dancer> on <irc.perl.org>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010 David Precious.
+Copyright 2010-11 David Precious.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
