@@ -11,7 +11,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '1.10';
+our $VERSION = '1.11';
 
 my $settings = undef;
 
@@ -229,7 +229,7 @@ sub _get_settings {
 
     get '/users/:id' => sub {
         template 'display_user', {
-            person => database->quick_select('users', id => params->{id}),
+            person => database->quick_select('users', { id => params->{id} }),
         };
     };
 
@@ -360,11 +360,11 @@ Examples:
   my $row = database->quick_select($table_name, { id => 42 });
 
   # Fetch all badgers as an array of hashrefs:
-  my @badgMellivoraers = database->quick_select('animals', { genus => 'Mellivora' });
+  my @badgers = database->quick_select('animals', { genus => 'Mellivora' });
 
   # Update the row where the 'id' column is '42', setting the 'foo' column to
   # 'Bar':
-  database->quick_update($table_name, { id => 42 }, { foo => 'Bar');
+  database->quick_update($table_name, { id => 42 }, { foo => 'Bar' });
 
   # Insert a new row, using a named connection (see above)
   database('connectionname')->quick_insert($table_name, { foo => 'Bar' });
@@ -387,6 +387,9 @@ L<http://github.com/bigpresh/Dancer-Plugin-Database>
 
 Feel free to fork the repo and submit pull requests!
 
+Feedback and bug reports are always appreciated.  Even a quick mail to let me
+know the module is useful to you would be very nice - it's nice to know if code
+is being actively used.
 
 =head1 ACKNOWLEDGEMENTS
 

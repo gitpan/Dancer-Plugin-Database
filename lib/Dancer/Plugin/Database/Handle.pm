@@ -5,7 +5,7 @@ use Carp;
 use DBI;
 use base qw(DBI::db);
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 NAME
 
@@ -92,7 +92,13 @@ or a list of matching rows as hashrefs, if called in list context.
 
 sub quick_select {
     my ($self, $table_name, $where) = @_;
-    return $self->_quick_query('SELECT', $table_name, undef, $where);
+    # Make sure to call _quick_query in the same context we were called.
+    # This is a little ugly, rewrite this perhaps.
+    if (wantarray) {
+        return ($self->_quick_query('SELECT', $table_name, undef, $where));
+    } else {
+        return $self->_quick_query('SELECT', $table_name, undef, $where);
+    }
 }
 
 sub _quick_query {
@@ -139,7 +145,7 @@ sub _quick_query {
         push @bind_params, values %$data;
     }
     
-    if ($type eq 'UPDATE' || $type eq 'DELETE') {
+    if ($type eq 'UPDATE' || $type eq 'DELETE' || $type eq 'SELECT') {
         $sql .= " WHERE " . join " AND ",
             map { $self->quote_identifier($_) . '=?' } keys %$where;
         push @bind_params, values %$where;
@@ -152,21 +158,24 @@ sub _quick_query {
     }
 
     Dancer::Logger::debug(
-        "Executing query $sql with params " . join ',', @bind_params
+        "Executing $type query $sql with params " . join ',', @bind_params
     );
 
     # Select queries, in scalar context, return the first matching row; in list
     # context, they return a list of matching rows.
     if ($type eq 'SELECT') {
         if (wantarray) {
-            return $self->selectall_arrayref(
-                $sql, { Slice => {} }, @bind_params
-            );
+            return @{ 
+                $self->selectall_arrayref(
+                    $sql, { Slice => {} }, @bind_params
+                )
+            };
         } else {
             return $self->selectrow_hashref($sql, undef, @bind_params);
         }
 
     } else {
+        # INSERT/UPDATE/DELETE queries just return the result of DBI's do()
         return $self->do($sql, undef, @bind_params);
     }
 }
