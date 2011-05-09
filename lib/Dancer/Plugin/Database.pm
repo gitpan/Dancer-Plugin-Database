@@ -12,7 +12,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '1.23';
+our $VERSION = '1.24';
 
 my $settings = undef;
 
@@ -165,7 +165,9 @@ sub _get_connection {
     # Dancer::Plugin::Database::Handle should be logged or not; this seemed a
     # little dirty, but DBI's docs encourage it
     # ("You can stash private data into DBI handles via $h->{private_..._*}..")
-    $dbh->{_private_log_queries} = $settings->{log_queries};
+    $dbh->{private_dancer_plugin_database} = {
+        log_queries => $settings->{log_queries} || 0,
+    };
 
     # Re-bless it as a Dancer::Plugin::Database::Handle object, to provide nice
     # extra features:
@@ -451,6 +453,8 @@ Alan Haggai
 Christian Sánchez
 
 Michael Stiller
+
+Martin J Evans
 
 =head1 BUGS
 

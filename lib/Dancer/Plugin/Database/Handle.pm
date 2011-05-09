@@ -5,7 +5,7 @@ use Carp;
 use DBI;
 use base qw(DBI::db);
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 NAME
 
@@ -159,13 +159,14 @@ sub _quick_query {
 
     # Dancer::Plugin::Database will have looked at the log_queries setting and
     # stashed it away for us to see:
-    if ($self->{_private_log_queries}) {
+    if ($self->{private_dancer_plugin_database}{log_queries}) {
         Dancer::Logger::debug(
             "Executing $type query $sql with params " . join ',', 
-            map { 
+            map {
+                defined $_ ? 
                 $_ =~ /^[[:ascii:]]+$/ ? 
                     length $_ > 50 ? substr($_, 0, 47) . '...' : $_
-                : "[non-ASCII data not logged]" 
+                : "[non-ASCII data not logged]" : 'undef'
             } @bind_params
         );
     }
