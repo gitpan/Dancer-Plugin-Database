@@ -12,7 +12,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '1.30_01';
+our $VERSION = '1.40';
 
 my $settings = undef;
 
@@ -103,10 +103,13 @@ sub _get_connection {
 
     # Assemble the DSN:
     my $dsn;
+    my $driver;
     if ($settings->{dsn}) {
         $dsn = $settings->{dsn};
+        ($driver) = $dsn =~ m{dbi:([^:]+)};
     } else {
         $dsn = "dbi:" . $settings->{driver};
+        $driver = $settings->{driver};
         my @extra_args;
 
         # DBD::SQLite wants 'dbname', not 'database', so special-case this
@@ -115,7 +118,7 @@ sub _get_connection {
         # things easier for our users by handling this for them):
         # (DBD::SQLite will support 'database', too, as of 1.32 when it's
         # released)
-        if ($settings->{driver} eq 'SQLite' 
+        if ($driver eq 'SQLite' 
             && $settings->{database} && !$settings->{dbname}) {
             $settings->{dbname} = delete $settings->{database};
         }
@@ -141,7 +144,7 @@ sub _get_connection {
             mysql  => 'mysql_enable_utf8',
             Pg     => 'pg_enable_utf8',
         );
-        if (my $param = $param_for_driver{ $settings->{driver} }) {
+        if (my $param = $param_for_driver{$driver}) {
             Dancer::Logger::debug(
                 "Adding $param to DBI connection params to enable UTF-8 support"
             );
@@ -294,6 +297,11 @@ C<< $dbh->ping >> method if the DBD driver supports it, or performing a simple
 no-op query against the database if not.  If the connection has gone away, a new
 connection will be obtained and returned.  This avoids any problems for
 a long-running script where the connection to the database might go away.
+
+Care is taken that handles are not shared across processes/threads, so this
+should be thread-safe with no issues with transactions etc.  (Thanks to Matt S
+Trout for pointing out the previous lack of thread safety.  Inspiration was
+drawn from DBIx::Connector.)
 
 =head1 CONFIGURATION
 
@@ -468,6 +476,9 @@ Martin J Evans
 Carlos Sosa
 
 Matt S Trout
+
+Matthew Vickers
+
 
 =head1 BUGS
 
