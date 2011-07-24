@@ -12,7 +12,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '1.40';
+our $VERSION = '1.41';
 
 my $settings = undef;
 
@@ -313,6 +313,7 @@ should be specified as, for example:
             driver: 'mysql'
             database: 'test'
             host: 'localhost'
+            port: 3306
             username: 'myusername'
             password: 'mypassword'
             connection_check_threshold: 10
@@ -453,7 +454,9 @@ This module is developed on Github at:
 
 L<http://github.com/bigpresh/Dancer-Plugin-Database>
 
-Feel free to fork the repo and submit pull requests!
+Feel free to fork the repo and submit pull requests!  Also, it makes sense to 
+L<watch the repo|https://github.com/bigpresh/Dancer-Plugin-Database/toggle_watch> 
+on GitHub for updates.
 
 Feedback and bug reports are always appreciated.  Even a quick mail to let me
 know the module is useful to you would be very nice - it's nice to know if code
@@ -478,6 +481,8 @@ Carlos Sosa
 Matt S Trout
 
 Matthew Vickers
+
+Christian Walde
 
 
 =head1 BUGS

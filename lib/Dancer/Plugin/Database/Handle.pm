@@ -9,7 +9,7 @@ our $VERSION = '0.06';
 
 =head1 NAME
 
-Dancer::Plugin::Database::Handle
+Dancer::Plugin::Database::Handle - subclassed DBI connection handle
 
 =head1 DESCRIPTION
 
@@ -148,15 +148,19 @@ sub _quick_query {
         $sql .= join ',', map { $self->quote_identifier($_) .'=?' } keys %$data;
         push @bind_params, values %$data;
     }
-    
+
     if (($type eq 'UPDATE' || $type eq 'DELETE' || $type eq 'SELECT') 
         && keys %$where)
     {
         $sql .= " WHERE " . join " AND ",
-            map { $self->quote_identifier($_) . '=?' } keys %$where;
-        push @bind_params, values %$where;
+            map {
+                defined($where->{$_}) ?
+                  $self->quote_identifier($_) . '=?' :
+                    $self->quote_identifier($_) . ' IS NULL'
+                } keys %$where;
+        push @bind_params, grep {defined $_} values %$where;
     }
-    
+
     # If it's a select query and we're called in scalar context, we'll only
     # return one row, so add a LIMIT 1
     if ($type eq 'SELECT' && !wantarray) {
@@ -227,7 +231,13 @@ Will result in:
 
 (Actually, parameterised queries will be used, with placeholders, so SQL
 injection attacks will not work, but it's easier to illustrate as though the
-values were interpolated directly.  Don't worry, they're not.))
+values were interpolated directly.  Don't worry, they're not.)
+
+With the same idea in mind, you can check if a value is NULL with:
+
+  { foo => undef }
+
+This will be correctly rewritten to C<foo IS NULL>.
 
 You can pass an empty hashref if you  want all rows, e.g.:
 
