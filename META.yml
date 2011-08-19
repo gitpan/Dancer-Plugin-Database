@@ -1,24 +1,24 @@
----
-abstract: 'easy database connections for Dancer applications'
+--- #YAML:1.0
+name:               Dancer-Plugin-Database
+version:            1.42
+abstract:           easy database connections for Dancer applications
 author:
-  - 'David Precious <davidp@preshweb.co.uk>'
-build_requires:
-  ExtUtils::MakeMaker: 0
+    - David Precious <davidp@preshweb.co.uk>
+license:            perl
+distribution_type:  module
 configure_requires:
-  ExtUtils::MakeMaker: 0
-dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.58, CPAN::Meta::Converter version 2.110930'
-license: perl
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
-name: Dancer-Plugin-Database
-no_index:
-  directory:
-    - t
-    - inc
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
 requires:
-  DBI: 0
-  Dancer: 1.175
-  Test::More: 0
-version: 1.41
+    Dancer:      1.175
+    DBI:         0
+    Test::More:  0
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.56
+meta-spec:
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4

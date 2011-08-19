@@ -12,7 +12,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '1.41';
+our $VERSION = '1.42';
 
 my $settings = undef;
 
@@ -144,7 +144,10 @@ sub _get_connection {
             mysql  => 'mysql_enable_utf8',
             Pg     => 'pg_enable_utf8',
         );
-        if (my $param = $param_for_driver{$driver}) {
+
+        my $param = $param_for_driver{$driver};
+
+        if ($param && !$settings->{dbi_params}{$param}) {
             Dancer::Logger::debug(
                 "Adding $param to DBI connection params to enable UTF-8 support"
             );
@@ -484,6 +487,9 @@ Matthew Vickers
 
 Christian Walde
 
+Alberto Simões
+
+James Aitken (LoonyPandora)
 
 =head1 BUGS
 
@@ -543,7 +549,7 @@ L<Dancer>
 
 L<DBI>
 
-
+L<Dancer::Plugin::SimpleCRUD>
 
 =cut
 
