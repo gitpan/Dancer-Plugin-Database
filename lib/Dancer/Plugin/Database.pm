@@ -6,13 +6,15 @@ use Dancer::Config;
 use DBI;
 use Dancer::Plugin::Database::Handle;
 
+=encoding utf8
+
 =head1 NAME
 
 Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '1.50';
+our $VERSION = '1.51';
 
 my $settings = undef;
 
@@ -334,7 +336,7 @@ handles cases where the database handle hasn't been used for a while and the
 underlying connection has gone away.
 
 The C<dbi_params> setting is also optional, and if specified, should be settings
-which can be passed to C<< DBI->connect >> as its third argument; see the L<DBI>
+which can be passed to C<< DBI->connect >> as its fourth argument; see the L<DBI>
 documentation for these.
 
 The optional C<on_connect_do> setting is an array of queries which should be
