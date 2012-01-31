@@ -21,4 +21,4 @@ requires:
   DBI: 0
   Dancer: 1.305
   Test::More: 0
-version: 1.60_02
+version: 1.70
