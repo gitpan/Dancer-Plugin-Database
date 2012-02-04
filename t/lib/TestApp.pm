@@ -3,6 +3,36 @@ package t::lib::TestApp;
 use Dancer;
 use Dancer::Plugin::Database;
 
+
+hook database_connected => sub {
+    my $dbh = shift;
+    vars->{connecthookfired} = $dbh; 
+
+};
+
+get '/connecthookfired' => sub { 
+    my $database = database();
+    # If the hook fired, it'll have squirreled away a reference to the DB handle
+    # for us to look for.
+    my $h = vars->{connecthookfired};
+    if (ref $h && $h->isa('DBI::db')) {
+        return 1;
+    } else {
+        return 0;
+    }
+};
+
+my $last_db_error;
+hook 'database_error' => sub {
+    $last_db_error = $_[0];
+};
+
+get '/errorhookfired' => sub {
+    database->do('something silly');
+    return $last_db_error ? 1 : 0;
+};
+
+
 get '/prepare_db' => sub {
 
     my @sql = (
@@ -145,6 +175,43 @@ get '/runtime_config' => sub {
 # Check we get the same handle each time we call database()
 get '/handles_cached' => sub {
     database() eq database() and return "Same handle returned";
+};
+
+
+# Check that the database_connection_lost hook fires when we force a db handle
+# to go away:
+hook database_connection_lost => sub { vars->{lost_connection} = 1; };
+get '/database_connection_lost_fires' => sub {
+    vars->{lost_connection} = 0;
+    database()->disconnect;
+    # We set connection_check_threshold to 0.1 at the start, so wait a second
+    # then check that the code detects the handle is no longer connected and
+    # triggers the hook
+    sleep 1;
+    my $handle = database();
+    return vars->{lost_connection};
+};
+
+# Check that database_connection_failed hook fires if we can't connect - pass
+# bogus connection details to make that happen
+hook database_connection_failed => sub {
+    vars->{connection_failed} = 1;
+};
+get '/database_connection_failed_fires' => sub {
+    # Give a ridiculous database filename which should never exist in order to
+    # force a connection failure
+    my $handle = database({ 
+        dsn => "dbi:SQLite:/Please/Tell/Me/This/File/Does/Not/Exist!",
+        dbi_params => {
+            HandleError => sub { return 1 }, # gobble connect failed message
+        },
+    });
+    return vars->{connection_failed};
+};
+
+# Check that the handle isa() subclass of the named class
+get '/isa/:class' => sub {
+    return database->isa(params->{class}) ? 1 : 0;
 };
 
 1;

@@ -14,7 +14,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '1.70';
+our $VERSION = '1.70_01';
 
 my $settings = undef;
 
@@ -80,6 +80,10 @@ register database => sub {
                 Dancer::Logger::debug(
                     "Database connection went away, reconnecting"
                 );
+
+                Dancer::Factory::Hook->instance->execute_hooks(
+                    'database_connection_lost', $handle->{dbh}
+                );
                 if ($handle->{dbh}) { eval { $handle->{dbh}->disconnect } }
                 return $handle->{dbh}= _get_connection($conn_details);
 
@@ -97,7 +101,14 @@ register database => sub {
     }
 };
 
-Dancer::Factory::Hook->instance->install_hooks(qw(database_connected));
+Dancer::Factory::Hook->instance->install_hooks(
+    qw(
+        database_connected 
+        database_connection_lost
+        database_connection_failed
+        database_error
+    )
+);
 
 register_plugin;
 
@@ -161,6 +172,14 @@ sub _get_connection {
         }
     }
 
+    # To support the database_error hook, use DBI's HandleError option
+    $settings->{dbi_params}{HandleError} = sub {
+        my ($error, $handle) = @_;
+        Dancer::Factory::Hook->instance->execute_hooks(
+            'database_error', $error, $handle
+        );
+    };
+
 
     my $dbh = DBI->connect($dsn, 
         $settings->{username}, $settings->{password}, $settings->{dbi_params}
@@ -169,6 +188,9 @@ sub _get_connection {
     if (!$dbh) {
         Dancer::Logger::error(
             "Database connection failed - " . $DBI::errstr
+        );
+        Dancer::Factory::Hook->instance->execute_hooks(
+            'database_connection_failed', $settings
         );
         return;
     } elsif (exists $settings->{on_connect_do}) {
@@ -190,8 +212,17 @@ sub _get_connection {
     };
 
     # Re-bless it as a Dancer::Plugin::Database::Handle object, to provide nice
-    # extra features:
-    return bless $dbh, 'Dancer::Plugin::Database::Handle';
+    # extra features (unless the config specifies a different class; if it does,
+    # this should be a subclass of Dancer::Plugin::Database::Handle in order to
+    # extend the features provided by it, or a direct subclass of DBI::db (or
+    # even DBI::db itself) to bypass the features provided by D::P::D::Handle)
+    my $handle_class = 
+        $settings->{handle_class} || 'Dancer::Plugin::Database::Handle';
+    my $package = $handle_class;
+    $package =~ s{::}{/}g;
+    $package .= '.pm';
+    require $package;
+    return bless $dbh => $handle_class;
 }
 
 
@@ -333,6 +364,7 @@ should be specified as, for example:
                 AutoCommit: 1
             on_connect_do: ["SET NAMES 'utf8'", "SET CHARACTER SET 'utf8'" ]
             log_queries: 1
+            handle_class: 'My::Super::Sexy::Database::Handle'
 
 The C<connection_check_threshold> setting is optional, if not provided, it
 will default to 30 seconds.  If the database keyword was last called more than
@@ -360,6 +392,11 @@ If you prefer, you can also supply a pre-crafted DSN using the C<dsn> setting;
 in that case, it will be used as-is, and the driver/database/host settings will 
 be ignored.  This may be useful if you're using some DBI driver which requires 
 a peculiar DSN.
+
+The optional C<handle_class> defines your own class into which database handles
+should be blessed.  This should be a subclass of
+L<Dancer::Plugin::Database::Handle> (or L<DBI::db> directly, if you just want to
+skip the extra features).
 
 
 =head2 DEFINING MULTIPLE CONNECTIONS
@@ -476,6 +513,23 @@ Called when a new database connection has been established, after performing any
 C<on_connect_do> statements, but before the handle is returned.  Receives the
 new database handle as a parameter, so that you can do what you need with it.
 
+=item C<database_connection_lost>
+
+Called when the plugin detects that the database connection has gone away.
+Receives the no-longer usable handle as a paramter, in case you need to extract
+some information from it (such as which server it was connected to).
+
+=item C<database_connection_failed>
+
+Called when an attempt to connect to the database fails.  Receives a hashref of
+connection settings as a parameter, containing the settings the plugin was using
+to connect (as obtained from the config file).
+
+=item C<database_error>
+
+Called when a database error is raised by C<DBI>.  Receives two parameters: the
+error message being returned by DBI, and the database handle in question.
+
 =back
 
 If you need other hook positions which would be useful to you, please feel free
@@ -535,6 +589,8 @@ Sergiy Borodych (bor)
 Mario Domgoergen (mdom)
 
 Andrey Inishev (inish777)
+
+Nick S. Knutov (knutov)
 
 
 =head1 BUGS

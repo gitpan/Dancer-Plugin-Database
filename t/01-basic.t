@@ -2,25 +2,50 @@ use strict;
 use warnings;
 
 use Test::More import => ['!pass'];
-
 use t::lib::TestApp;
 use Dancer ':syntax';
 use Dancer::Test;
-set logger => 'console';
-set log => 'debug';
 
 eval { require DBD::SQLite };
 if ($@) {
     plan skip_all => 'DBD::SQLite required to run these tests';
 }
 
-plan tests => 32;
+plan tests => 40;
 
 my $dsn = "dbi:SQLite:dbname=:memory:";
 
-setting plugins => { Database => { dsn => $dsn, } };
+set plugins => { 
+    Database => { 
+        dsn => $dsn, 
+        connection_check_threshold => 0.1,
+        dbi_params => {
+            RaiseError => 0,
+            PrintError => 0,
+            PrintWarn  => 0,
+        },
+        handle_class => 'TestHandleClass',
+    } 
+};
+set logger => 'console'; set log => 'debug';
 
-response_status_is [ GET => '/prepare_db' ], 200, 'db is created';
+
+response_content_is   [ GET => '/connecthookfired' ], 1,
+    'database_connected hook fires';
+
+response_content_is   [ GET => '/errorhookfired' ], 1,
+    'database_error hook fires';
+
+response_content_is   [ GET => '/isa/DBI::db' ], 1,
+    "handle isa('DBI::db')";
+response_content_is   [ GET => '/isa/Dancer::Plugin::Database::Handle' ], 1,
+    "handle isa('Dancer::Plugin::Database::Handle')";
+response_content_is   [ GET => '/isa/TestHandleClass' ], 1,
+    "handle isa('TestHandleClass')";
+response_content_is   [ GET => '/isa/duck' ], 0, # reverse duck-typing ;)
+    "handle is not a duck";
+
+response_status_is    [ GET => '/prepare_db' ], 200, 'db is created';
 
 response_status_is    [ GET => '/' ], 200,   "GET / is found";
 response_content_like [ GET => '/' ], qr/5/, 
@@ -114,3 +139,13 @@ response_content_like [ GET => '/runtime_config' ], qr/ok/,
 # Test that we get the same handle each time we call the database() keyword
 # (i.e., that handles are cached appropriately)
 response_content_like [ GET => '/handles_cached' ], qr/Same handle returned/;
+
+# Test that the database_connection_lost hook fires when the connection goes
+# away
+response_content_is [ GET => '/database_connection_lost_fires' ], 1,
+    'database_connection_lost hook fires';
+
+# Test that the database_connection_failed hook fires when we can't connect
+response_content_is [ GET => '/database_connection_failed_fires' ], 1,
+    'database_connection_failed hook fires';
+
