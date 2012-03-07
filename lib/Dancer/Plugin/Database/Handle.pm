@@ -5,7 +5,7 @@ use Carp;
 use DBI;
 use base qw(DBI::db);
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 =head1 NAME
 
@@ -287,7 +287,7 @@ sub _quick_query {
 
     # Add an ORDER BY clause, if we want to:
     if (exists $opts->{order_by}) {
-        $sql .= $self->_build_order_by_clause($opts->{order_by});
+        $sql .= ' ' . $self->_build_order_by_clause($opts->{order_by});
     }
 
 

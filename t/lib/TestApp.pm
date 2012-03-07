@@ -2,6 +2,7 @@ package t::lib::TestApp;
 
 use Dancer;
 use Dancer::Plugin::Database;
+no warnings 'uninitialized';
 
 
 hook database_connected => sub {
@@ -42,6 +43,8 @@ get '/prepare_db' => sub {
         q/insert into users values (3, 'badger', 'animal')/,
         q/insert into users values (4, 'bodger', 'man')/,
         q/insert into users values (5, 'mousey', 'animal')/,
+        q/insert into users values (6, 'mystery2', null)/,
+        q/insert into users values (7, 'mystery1', null)/,
     );
 
     database->do($_) for @sql;
@@ -163,6 +166,12 @@ get '/quick_select_sorted_rev' => sub {
     );
     return join ':', map { $_->{name} } @users;
 };
+get '/quick_select_sorted_where' => sub {
+    my @users = database->quick_select(
+        'users', { category => undef }, { order_by => 'name' }
+    );
+    return join ':', map { $_->{name} } @users;
+};
 
 
 
@@ -203,7 +212,9 @@ get '/database_connection_failed_fires' => sub {
     my $handle = database({ 
         dsn => "dbi:SQLite:/Please/Tell/Me/This/File/Does/Not/Exist!",
         dbi_params => {
-            HandleError => sub { return 1 }, # gobble connect failed message
+            HandleError => sub { return 0 }, # gobble connect failed message
+            RaiseError => 0,
+            PrintError => 0,
         },
     });
     return vars->{connection_failed};
