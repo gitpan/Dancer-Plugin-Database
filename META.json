@@ -38,7 +38,7 @@
          }
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "web" : "https://github.com/bigpresh/Dancer-Plugin-Database/issues"
@@ -48,5 +48,5 @@
          "url" : "https://github.com/bigpresh/Dancer-Plugin-Database"
       }
    },
-   "version" : "1.95_02"
+   "version" : "2.00"
 }
