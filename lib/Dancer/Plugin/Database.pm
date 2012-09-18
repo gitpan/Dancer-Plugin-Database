@@ -27,7 +27,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '2.00';
+our $VERSION = '2.01';
 
 my $settings = undef;
 
@@ -188,8 +188,10 @@ sub _get_connection {
         my $param = $param_for_driver{$driver};
 
         if ($param && !$settings->{dbi_params}{$param}) {
-            $logger->(debug,
-                      "Adding $param to DBI connection params to enable UTF-8 support");
+            $logger->(
+                debug => "Adding $param to DBI connection params"
+                    . " to enable UTF-8 support"
+            );
             $settings->{dbi_params}{$param} = 1;
         }
     }
