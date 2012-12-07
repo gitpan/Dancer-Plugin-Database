@@ -27,7 +27,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '2.01';
+our $VERSION = '2.02';
 
 my $settings = undef;
 
@@ -275,14 +275,22 @@ sub _get_settings {
     # If no name given, just return the default settings
     if (!defined $name) {
         $return_settings = { %$settings };
+        if (!$return_settings->{driver} && !$return_settings->{dsn}) {
+            $logger->('error',
+                "Asked for default connection (no name given)"
+                ." but no default connection details found in config"
+            );
+        }
     } else {
         # If there are no named connections in the config, bail now:
         return unless exists $settings->{connections};
 
 
         # OK, find a matching config for this name:
-        if (my $settings = $settings->{connections}{$name}) {
-            $return_settings = { %$settings };
+        if (my $named_settings = $settings->{connections}{$name}) {
+            # Take a (shallow) copy of the settings, so we don't change them
+            warn "Found settings for $name, I'll return those";
+            $return_settings = { %$named_settings };
         } else {
             # OK, didn't match anything
             $logger->('error',
