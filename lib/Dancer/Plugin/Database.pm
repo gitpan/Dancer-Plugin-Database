@@ -27,7 +27,7 @@ Dancer::Plugin::Database - easy database connections for Dancer applications
 
 =cut
 
-our $VERSION = '2.03';
+our $VERSION = '2.04';
 
 my $settings = undef;
 
@@ -163,7 +163,7 @@ sub _get_connection {
             $settings->{dbname} = delete $settings->{database};
         }
 
-        for (qw(database dbname host port)) {
+        for (qw(database dbname host port sid)) {
             if (exists $settings->{$_}) {
                 push @extra_args, $_ . "=" . $settings->{$_};
             }
@@ -442,6 +442,25 @@ The optional C<handle_class> defines your own class into which database handles
 should be blessed.  This should be a subclass of
 L<Dancer::Plugin::Database::Handle> (or L<DBI::db> directly, if you just want to
 skip the extra features).
+
+You will require slightly different options depending on the database engine
+you're talking to.  For instance, for SQLite, you won't need to supply
+C<hostname>, C<port> etc, but will need to supply C<database> as the name of the
+SQLite database file:
+
+    plugins:
+        Database:
+            driver: SQLite
+            database: 'foo.sqlite'
+
+For Oracle, you may want to pass C<sid> (system ID) to identify a particular
+database, e.g.:
+
+    plugins:
+        Database:
+            driver: Oracle
+            host: localhost
+            sid: ABC12
 
 
 =head2 DEFINING MULTIPLE CONNECTIONS
