@@ -4,10 +4,8 @@ MANIFEST.SKIP
 Makefile.PL
 README
 lib/Dancer/Plugin/Database.pm
-lib/Dancer/Plugin/Database/Handle.pm
 t/00-load.t
 t/01-basic.t
-t/02-handle.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
@@ -16,4 +14,5 @@ t/lib/lib/TestHandleClass.pm
 t/lib/public/.placeholder
 t/lib/views/.placeholder
 t/lib/lib/.placeholder
-META.yml                                 Module meta-data (added by MakeMaker)
+META.yml                                 Module YAML meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)

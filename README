@@ -15,7 +15,7 @@ SYNOPSIS
             template 'display_widget', { widget => $sth->fetchrow_hashref };
         };
 
-        # The handle is a Dancer::Plugin::Database::Handle object, which subclasses
+        # The handle is a Dancer::Plugin::Database::Core::Handle object, which subclasses
         # DBI's DBI::db handle and adds a few convenience features, for example:
         get '/insert/:name' => sub {
             database->quick_insert('people', { name => params->{name} });
@@ -36,10 +36,10 @@ DESCRIPTION
     Provides an easy way to obtain a connected DBI database handle by simply
     calling the database keyword within your Dancer application
 
-    Returns a Dancer::Plugin::Database::Handle object, which is a subclass
+    Returns a Dancer::Plugin::Database::Core::Handle object, which is a subclass
     of DBI's `DBI::db' connection handle object, so it does everything you'd
     expect to do with DBI, but also adds a few convenience methods. See the
-    documentation for Dancer::Plugin::Database::Handle for full details of
+    documentation for Dancer::Plugin::Database::Core::Handle for full details of
     those.
 
     Takes care of ensuring that the database handle is still connected and
@@ -106,7 +106,7 @@ CONFIGURATION
 
     The optional `log_queries' setting enables logging of queries generated
     by the helper functions `quick_insert' et al in
-    Dancer::Plugin::Database::Handle. If you enable it, generated queries
+    Dancer::Plugin::Database::Core::Handle. If you enable it, generated queries
     will be logged at 'debug' level. Be aware that they will contain the
     data you're passing to/from the database, so be careful not to enable
     this option in production, where you could inadvertently log sensitive
@@ -119,7 +119,7 @@ CONFIGURATION
 
     The optional `handle_class' defines your own class into which database
     handles should be blessed. This should be a subclass of
-    Dancer::Plugin::Database::Handle (or DBI::db directly, if you just want
+    Dancer::Plugin::Database::Core::Handle (or DBI::db directly, if you just want
     to skip the extra features).
 
     You will require slightly different options depending on the database
@@ -198,10 +198,10 @@ GETTING A DATABASE HANDLE
 
 CONVENIENCE FEATURES (quick_select, quick_update, quick_insert, quick_delete)
     The handle returned by the `database' keyword is a
-    Dancer::Plugin::Database::Handle object, which subclasses the `DBI::db'
+    Dancer::Plugin::Database::Core::Handle object, which subclasses the `DBI::db'
     DBI connection handle. This means you can use it just like you'd
     normally use a DBI handle, but extra convenience methods are provided,
-    as documented in the POD for Dancer::Plugin::Database::Handle.
+    as documented in the POD for Dancer::Plugin::Database::Core::Handle.
 
     Examples:
 
@@ -225,7 +225,7 @@ CONVENIENCE FEATURES (quick_select, quick_update, quick_insert, quick_delete)
       database->quick_select($table_name, {});
 
     There's more extensive documentation on these features in
-    Dancer::Plugin::Database::Handle, including using the `order_by',
+    Dancer::Plugin::Database::Core::Handle, including using the `order_by',
     `limit', `columns' options to sort / limit results and include only
     specific columns.
 
